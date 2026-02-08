@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- ETIQUETAS ANTI-CACHÉ PARA TV -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    
+    <title>Fútbol TV Premium</title>
+    <style>
+        /* --- ESTILO GENERAL --- */
+        body {
+            margin: 0;
+            padding: 20px;
+            background: radial-gradient(circle at center, #111 0%, #000 100%);
+            color: #fff;
+            font-family: sans-serif;
+            min-height: 100vh;
+        }
+
+        /* --- CABECERA --- */
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin: 0;
+            background: -webkit-linear-gradient(#00C9FF, #92FE9D);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(0,201,255,0.4);
+        }
+
+        .reloj {
+            font-size: 1.2rem;
+            color: #aaa;
+            margin-top: 10px;
+        }
+
+        /* --- GRID DE CANALES --- */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 25px;
+            padding: 10px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* --- TARJETA --- */
+        .card {
+            background: rgba(30,30,30,0.8);
+            border: 2px solid #333;
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            height: 180px;
+            position: relative;
+            outline: none; /* Sin borde azul del navegador */
+        }
+
+        /* IMAGEN LOGO */
+        .card img {
+            width: 100%;
+            height: 80px;
+            object-fit: contain;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+            pointer-events: none; /* Evita que se arrastre la imagen */
+        }
+
+        /* TEXTO CANAL */
+        .card span {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ddd;
+            text-align: center;
+        }
+
+        /* --- EFECTO FOCUS (MANDO TV) --- */
+        /* Al seleccionar con el mando, se ilumina en amarillo */
+        .card:focus, .card:hover {
+            transform: scale(1.1);
+            background: #222;
+            border-color: #FFD700; /* Amarillo Oro */
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.5); /* Resplandor */
+            z-index: 10;
+        }
+
+        .card:focus span, .card:hover span {
+            color: #FFD700;
+        }
+        
+        /* Indicador de versión (abajo derecha) */
+        .version-tag {
+            position: fixed;
+            bottom: 10px;
+            right: 15px;
+            font-size: 0.8rem;
+            color: #555;
+            background: rgba(0,0,0,0.5);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/torrentstream@latest/dist/torrentstream.min.js"></script>
+</head>
+<body>
+
+    <header>
+        <h1>⚽ Fútbol TV Berastegui</h1>
+        <div class="reloj" id="reloj">--:--</div>
+    </header>
+
+    <div class="grid" id="canal-grid"></div>
+    
+    <!-- Tag para saber si se ha actualizado en la TV -->
+    <div class="version-tag" id="version-date">Cargando...</div>
+
+    <script>
+        // --- ZONA DE EDICIÓN DIARIA (Edita esto en GitHub) ---
+        const canales = [
+            {
+                nombre: "M. LaLiga",
+                id: "af458073c3096293a4dea9f369d4f308e7125bd6",
+                logo: "https://cdn.discordapp.com/attachments/678223650264186880/1468791748913528852/Movistar_LaLiga.png?ex=69854e69&is=6983fce9&hm=79e9769470e8de46f095993ec693d64038dee82fe82a423e2de28e5c89942ebe&"
+            },
+            {
+                nombre: "M. LaLiga 2",
+                id: "d4ff041287a43e3114d411d671c4b4e92e21f33y",
+                logo: "https://cdn.discordapp.com/attachments/678223650264186880/1468792807551406221/movistar_laliga.png?ex=69854f66&is=6983fde6&hm=5fa10880b163c474ab57cfd8276515926c4a41ffd8fbeafbd13ece1906e7e1fb&"
+            },
+            {
+                nombre: "DAZN LaLiga",
+                id: "19f28f60c908f987b1a03da078e63320d7bf29e8",
+                logo: "https://cdn.discordapp.com/attachments/678223650264186880/1468941071013642250/imagen_2026-02-05_130706962-removebg-preview.png?ex=6985d97a&is=698487fa&hm=281684c951eb67ba32c7b079f02c2516bb183bb2934b46baf3ca87aa129d1a07&"
+            },
+            {
+                nombre: "DAZN LaLiga 2",
+                id: "635b61c1f240449163260cd914d10d886a54fee3",
+                logo: "https://cdn.discordapp.com/attachments/678223650264186880/1468941071013642250/imagen_2026-02-05_130706962-removebg-preview.png?ex=6985d97a&is=698487fa&hm=281684c951eb67ba32c7b079f02c2516bb183bb2934b46baf3ca87aa129d1a07&"
+            },
+            {
+                nombre: "M. Champions",
+                id: "c16b4fab1f724c94cad92081cbb7fc7c6fe8a2cc",
+                logo: "https://cdn.discordapp.com/attachments/678223650264186880/1468940680280670228/liga-campeones.png?ex=6985d91d&is=6984879d&hm=33a51aec6d7be9eac82baab3601720e9d3e3e35f7dceb14b2b17b8482c132ee0&"
+            },
+            {
+                nombre: "M. Champions 2",
+                id: "c6a3673f6a37b1bd3cf31fdd6404dd33d48cfccb",
+                logo: "https://cdn.discordapp.com/attachments/678223650264186880/1468940680280670228/liga-campeones.png?ex=6985d91d&is=6984879d&hm=33a51aec6d7be9eac82baab3601720e9d3e3e35f7dceb14b2b17b8482c132ee0&"
+            },
+            {
+                nombre: "#Vamos",
+                id: "3b2a8b41e7097c16b0468b42d7de0320886fa933",
+                logo: "https://cdn.discordapp.com/attachments/678223650264186880/1468941211053326407/edQ_Azxbjn5hNcZiZAJVwitVsx1cFLX6sKsiOUzzr8ps8tf8NeLEpfjwD8uhZ3cPZJU3oUzSZq8s900-c-k-c0x00ffffff-no-rj.png?ex=6985d99c&is=6984881c&hm=5d3462b86dedba5ffe673369d04423a428cbe6b69fdfa75b44e1fa0674fd82bd&"
+            },
+            {
+                nombre: "Eurosport",
+                id: "bae98f69fbf867550b4f73b4eb176dae84d7f909",
+                logo: "https://cdn.discordapp.com/attachments/678223650264186880/1468941384529612800/xlogo-eurosport-1-154.jpg.pagespeed.ic.Y_sjB37h-O.png?ex=6985d9c5&is=69848845&hm=6ac6a11bb5e786ca726142813fd6f2d59f7bbf174fc3944de8e72b578f35bf29&"
+            },
+            {
+                nombre: "DAZN F1",
+                id: "691739972eb3468cf16b25e84dafdeaa40dead6d",
+                logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/F1.svg/320px-F1.svg.png"
+            }
+        ];
+
+        // --- GENERAR TARJETAS ---
+        const container = document.getElementById('canal-grid');
+
+        canales.forEach(canal => {
+            const btn = document.createElement('button');
+            btn.className = 'card';
+            btn.onclick = () => verCanal(canal.id);
+
+            const img = document.createElement('img');
+            img.src = canal.logo;
+            img.alt = canal.nombre;
+            
+            // Si falla la imagen, pone un icono genérico
+            img.onerror = function() {
+                this.src = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/300px-No_image_available.svg.png";
+            };
+
+            const span = document.createElement('span');
+            span.innerText = canal.nombre;
+
+            btn.appendChild(img);
+            btn.appendChild(span);
+            container.appendChild(btn);
+        });
+
+        // --- ABRIR ACESTREAM ---
+        function verCanal(id) {
+            window.location.href = "acestream://" + id;
+        }
+
+        // --- RELOJ ---
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('reloj').innerText = now.toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'});
+        }, 1000);
+        
+        // --- FECHA DE ACTUALIZACIÓN ---
+        // Pone automáticamente la fecha de hoy para que sepas si la TV cargó lo nuevo
+        document.getElementById('version-date').innerText = "Actualizado: " + new Date().toLocaleDateString('es-ES');
+
+    </script>
+</body>
+</html>
